@@ -6,6 +6,7 @@ export const get = query({
   handler: async (ctx, { orgId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthorized");
+    const userId = identity.subject;
 
     const boards = await ctx.db
       .query("boards")
@@ -13,6 +14,16 @@ export const get = query({
       .order("desc")
       .collect();
 
-    return boards;
+    const boardsWithFavoriteRelation = boards.map((b) =>
+      ctx.db
+        .query("userFavorites")
+        .withIndex("by_user_board", (q) =>
+          q.eq("userId", userId).eq("boardId", b._id),
+        )
+        .unique()
+        .then((fav) => ({ ...b, isFavorite: !!fav })),
+    );
+
+    return Promise.all(boardsWithFavoriteRelation);
   },
 });

@@ -14,6 +14,8 @@ import { useApiMutation } from "@/hooks/use-api-mutation";
 
 import { Footer } from "./footer";
 import { Overlay } from "./overlay";
+import { useMutation } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface BoardCardProps {
   id: string;
@@ -43,18 +45,18 @@ export const BoardCard = ({
     addSuffix: true,
   });
 
-  const { mutate: onFavorite, pending: pendingFavorite } = useApiMutation(
-    api.board.favorite,
-  );
-  const { mutate: onUnfavorite, pending: pendingUnfavorite } = useApiMutation(
-    api.board.unfavorite,
-  );
+  const onFavorite = useMutation(api.board.favorite);
+  const onUnfavorite = useMutation(api.board.unfavorite);
 
   const toggleFavorite = () => {
     if (isFavorite) {
-      onUnfavorite({ id }).catch(() => toast.error("Failed to unfavorite"));
+      onUnfavorite({ boardId: id as Id<"boards"> }).catch(() =>
+        toast.error("Failed to unfavorite"),
+      );
     } else {
-      onFavorite({ id, orgId }).catch(() => toast.error("Failed to favorite"));
+      onFavorite({ id: id as Id<"boards">, orgId }).catch(() =>
+        toast.error("Failed to favorite"),
+      );
     }
   };
 
@@ -76,7 +78,7 @@ export const BoardCard = ({
           authorLabel={authorLabel}
           createdAtLabel={createdAtLabel}
           onClick={toggleFavorite}
-          disabled={pendingFavorite || pendingUnfavorite}
+          disabled={false}
         />
       </div>
     </Link>
