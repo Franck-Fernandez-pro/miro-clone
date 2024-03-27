@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 
 export const get = query({
-  args: { orgId: v.string() },
+  args: { orgId: v.string(), search: v.optional(v.string()) },
   handler: async (ctx, { orgId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthorized");
