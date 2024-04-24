@@ -1,26 +1,56 @@
-import {
-  createClient,
-  LiveList,
-  LiveMap,
-  LiveObject,
-} from "@liveblocks/client";
-import { createRoomContext } from "@liveblocks/react";
-
-import { Layer, Color } from "@/types/canvas";
+import { createClient } from "@liveblocks/client";
+import { createRoomContext, createLiveblocksContext } from "@liveblocks/react";
 
 const client = createClient({
-  throttle: 16,
-  authEndpoint: "/api/liveblocks-auth",
+  publicApiKey: process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY!,
+  async resolveUsers({ userIds }) {
+    // Used only for Comments and Notifications. Return a list of user information
+    // retrieved from `userIds`. This info is used in comments, mentions etc.
+
+    // const usersData = await __fetchUsersFromDB__(userIds);
+    //
+    // return usersData.map((userData) => ({
+    //   name: userData.name,
+    //   avatar: userData.avatar.src,
+    // }));
+
+    return [];
+  },
+  async resolveMentionSuggestions({ text }) {
+    // Used only for Comments. Return a list of userIds that match `text`.
+    // These userIds are used to create a mention list when typing in the
+    // composer.
+    //
+    // For example when you type "@jo", `text` will be `"jo"`, and
+    // you should to return an array with John and Joanna's userIds:
+    // ["john@example.com", "joanna@example.com"]
+
+    // const users = await getUsers({ search: text });
+    // return users.map((user) => user.id);
+
+    return [];
+  },
+  async resolveRoomsInfo({ roomIds }) {
+    // Used only for Comments and Notifications. Return a list of room information
+    // retrieved from `roomIds`.
+
+    // const roomsData = await __fetchRoomsFromDB__(roomIds);
+    //
+    // return roomsData.map((roomData) => ({
+    //   name: roomData.name,
+    //   url: roomData.url,
+    // }));
+
+    return [];
+  },
 });
 
 // Presence represents the properties that exist on every user in the Room
 // and that will automatically be kept in sync. Accessible through the
 // `user.presence` property. Must be JSON-serializable.
 type Presence = {
-  cursor: { x: number; y: number } | null;
-  selection: string[];
-  pencilDraft: [x: number, y: number, pressure: number][] | null;
-  penColor: Color | null;
+  // cursor: { x: number, y: number } | null,
+  // ...
 };
 
 // Optionally, Storage represents the shared document that persists in the
@@ -28,19 +58,16 @@ type Presence = {
 // LiveList, LiveMap, LiveObject instances, for which updates are
 // automatically persisted and synced to all connected clients.
 type Storage = {
-  layers: LiveMap<string, LiveObject<Layer>>;
-  layerIds: LiveList<string>;
+  // author: LiveObject<{ firstName: string, lastName: string }>,
+  // ...
 };
 
 // Optionally, UserMeta represents static/readonly metadata on each user, as
 // provided by your own custom auth back end (if used). Useful for data that
 // will not change during a session, like a user's name or avatar.
 type UserMeta = {
-  id?: string;
-  info?: {
-    name?: string;
-    picture?: string;
-  };
+  // id?: string,  // Accessible through `user.id`
+  // info?: Json,  // Accessible through `user.info`
 };
 
 // Optionally, the type of custom events broadcast and listened to in this
@@ -58,6 +85,7 @@ export type ThreadMetadata = {
   // time: number;
 };
 
+// Room-level hooks, use inside `RoomProvider`
 export const {
   suspense: {
     RoomProvider,
@@ -67,6 +95,7 @@ export const {
     useSelf,
     useOthers,
     useOthersMapped,
+    useOthersListener,
     useOthersConnectionIds,
     useOther,
     useBroadcastEvent,
@@ -86,7 +115,6 @@ export const {
     useStatus,
     useLostConnectionListener,
     useThreads,
-    useUser,
     useCreateThread,
     useEditThreadMetadata,
     useCreateComment,
@@ -94,45 +122,30 @@ export const {
     useDeleteComment,
     useAddReaction,
     useRemoveReaction,
+    useThreadSubscription,
+    useMarkThreadAsRead,
+    useRoomNotificationSettings,
+    useUpdateRoomNotificationSettings,
+
+    // These hooks can be exported from either context
+    // useUser,
+    // useRoomInfo
   },
 } = createRoomContext<Presence, Storage, UserMeta, RoomEvent, ThreadMetadata>(
   client,
-  {
-    async resolveUsers({ userIds }) {
-      // Used only for Comments. Return a list of user information retrieved
-      // from `userIds`. This info is used in comments, mentions etc.
-
-      // const usersData = await __fetchUsersFromDB__(userIds);
-      //
-      // return usersData.map((userData) => ({
-      //   name: userData.name,
-      //   avatar: userData.avatar.src,
-      // }));
-
-      return [];
-    },
-    async resolveMentionSuggestions({ text, roomId }) {
-      // Used only for Comments. Return a list of userIds that match `text`.
-      // These userIds are used to create a mention list when typing in the
-      // composer.
-      //
-      // For example when you type "@jo", `text` will be `"jo"`, and
-      // you should to return an array with John and Joanna's userIds:
-      // ["john@example.com", "joanna@example.com"]
-
-      // const userIds = await __fetchAllUserIdsFromDB__(roomId);
-      //
-      // Return all userIds if no `text`
-      // if (!text) {
-      //   return userIds;
-      // }
-      //
-      // Otherwise, filter userIds for the search `text` and return
-      // return userIds.filter((userId) =>
-      //   userId.toLowerCase().includes(text.toLowerCase())
-      // );
-
-      return [];
-    },
-  },
 );
+
+// Project-level hooks, use inside `LiveblocksProvider`
+export const {
+  suspense: {
+    LiveblocksProvider,
+    useMarkInboxNotificationAsRead,
+    useMarkAllInboxNotificationsAsRead,
+    useInboxNotifications,
+    useUnreadInboxNotificationsCount,
+
+    // These hooks can be exported from either context
+    useUser,
+    useRoomInfo,
+  },
+} = createLiveblocksContext<UserMeta, ThreadMetadata>(client);
