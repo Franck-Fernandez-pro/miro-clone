@@ -25,6 +25,7 @@ export const BoardList = ({
   const data = useQuery(api.boards.get, {
     orgId,
     search,
+    favorites,
   });
 
   if (data === undefined) {
