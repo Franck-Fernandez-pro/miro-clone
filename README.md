@@ -1,6 +1,6 @@
 This project was realized thanks to the tutorial [Build a Real-Time Miro Clone With Nextjs, React, Tailwind (2024)](https://youtu.be/ADJKbuayubE?si=Ge-pqxs9pzt-C5S2)
 
-🔴 Live: (miro-clone)[miro-clone-blush.vercel.app] 🔴 
+🔴 Live: [miro-clone](miro-clone-blush.vercel.app) 🔴 
 
 Stack:
 
